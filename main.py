@@ -14,7 +14,6 @@ import asyncio
 import uvloop
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 load_dotenv()
 
 api_id = os.getenv("API_ID")
@@ -34,7 +33,8 @@ def format_uptime(seconds):
 
 def signal_handler(sig, frame):
     print("Shutdown initiated...")
-    app.stop()
+    if app.is_connected:
+        app.stop()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -42,7 +42,7 @@ signal.signal(signal.SIGINT, signal_handler)
 @app.on_message(filters.text)
 async def handle_message(client, message):
     text = message.text.lower()
-
+    
     if message.from_user.id == OWNER_ID:
         if "start" in text:
             await client.send_message(message.chat.id, "Halo, saya bot!")
@@ -95,8 +95,7 @@ async def handle_message(client, message):
                 await client.send_message(message.chat.id, "Melakukan update... silakan tunggu.")
                 subprocess.run(["git", "pull"], check=True)
                 await client.send_message(message.chat.id, "Update selesai, bot akan restart.")
-                time.sleep(2)
-                os.execl(sys.executable, sys.executable, "-m", "main")
+                restart_bot()
             except subprocess.CalledProcessError as e:
                 await client.send_message(message.chat.id, f"Gagal melakukan update: {e}")
             except Exception as e:
@@ -109,45 +108,38 @@ async def handle_message(client, message):
             delta_ping = round((end - start).total_seconds() * 1000, 3)
             await client.send_message(message.chat.id, f"Ping: {delta_ping} ms")
 
-#Py-TgCalls
-        
         elif "startvc" in text:
             try:
-                chat_id = message.chat.id
-                await pytgcalls.start(chat_id)
+                await pytgcalls.start(message.chat.id)
                 await message.reply("Obrolan suara dimulai!")
             except Exception as e:
                 await message.reply(f"Error: {e}")
 
         elif "stopvc" in text:
             try:
-                chat_id = message.chat.id
-                await pytgcalls.leave_group_call(chat_id)
+                await pytgcalls.leave_group_call(message.chat.id)
                 await message.reply("Obrolan suara dihentikan!")
             except Exception as e:
                 await message.reply(f"Error: {e}")
 
         elif "play" in text:
             try:
-                chat_id = message.chat.id
-                audio_url = "URL_LAGU"  # Masukkan URL atau path file musik di sini
-                await pytgcalls.join_group_call(chat_id, audio_url)
+                audio_url = "https://youtu.be/D1CpWYU3DvA?si=A7WJp4B9HnLakYuG"
+                await pytgcalls.join_group_call(message.chat.id, audio_url)
                 await message.reply("Mulai memutar musik!")
             except Exception as e:
                 await message.reply(f"Error: {e}")
 
         elif "end" in text:
             try:
-                chat_id = message.chat.id
-                await pytgcalls.leave_group_call(chat_id)
+                await pytgcalls.leave_group_call(message.chat.id)
                 await message.reply("Musik dihentikan!")
             except Exception as e:
                 await message.reply(f"Error: {e}")
 
         elif "vcinfo" in text:
             try:
-                chat_id = message.chat.id
-                participants = await pytgcalls.get_participants(chat_id)
+                participants = await pytgcalls.get_participants(message.chat.id)
                 user_list = "\n".join([f"- {user.user.first_name}" for user in participants])
                 await message.reply(f"Pengguna di obrolan suara:\n{user_list}")
             except Exception as e:
@@ -157,16 +149,19 @@ async def handle_message(client, message):
 async def on_update(update: Update):
     pass
 
+def restart_bot():
+    app.stop()
+    time.sleep(2)
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
 if __name__ == "__main__":
     pytgcalls.start()
     try:
         print("Running...")
         app.run()
     except (OSError, ConnectionResetError) as e:
-        print(f"Koneksi terputus: {e}. Mencoba reconnect dalam 5 detik...")
-        app.stop()
+        print(f"Koneksi terputus: {e}. Mencoba restart dalam 5 detik...")
         time.sleep(5)
-        os.execl(sys.executable, sys.executable, "-m", "main")
+        restart_bot()
     except Exception as e:
         print(f"Unexpected error occurred: {e}")
-        
