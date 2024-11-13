@@ -67,7 +67,7 @@ async def handle_message(client, message):
                 f"<b>Berhasil keluar dari <code>{done}</code> grup/channel, gagal keluar dari <code>{er}</code> grup/channel</b>"
             )
 
-        elif "clearall" in text:
+        elif "hapusall" in text:
             await message.reply("<b>Memulai proses hapus semua history chat pribadi...</b>")
             er = 0
             done = 0
@@ -75,9 +75,14 @@ async def handle_message(client, message):
             async for dialog in client.get_dialogs():
                 if dialog.chat.type == enums.ChatType.PRIVATE:
                     try:
-                        await client.delete_history(dialog.chat.id)
-                        done += 1
-                        await sleep(1)
+                        messages = await client.get_chat_history(dialog.chat.id, limit=100)
+                        message_ids = [msg.message_id for msg in messages]
+                        while message_ids:
+                            await client.delete_messages(dialog.chat.id, message_ids)
+                            done += len(message_ids)
+                            messages = await client.get_chat_history(dialog.chat.id, limit=100)
+                            message_ids = [msg.message_id for msg in messages]
+                            await sleep(1)
                     except FloodWait as e:
                         print(f"FloodWait: Menunggu {e.value} detik")
                         await sleep(e.value)
@@ -86,7 +91,7 @@ async def handle_message(client, message):
                         er += 1
 
             await message.reply(
-                f"<b>Berhasil menghapus history dari <code>{done}</code> chat pribadi, gagal menghapus dari <code>{er}</code> chat</b>"
+                f"<b>Berhasil menghapus <code>{done}</code> pesan dari chat pribadi, gagal menghapus dari <code>{er}</code> chat</b>"
             )
 
         elif "update" in text:
@@ -119,4 +124,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
-                        
+                                      
