@@ -11,7 +11,8 @@ from pyrogram.raw.functions.messages import DeleteHistory
 from asyncio import sleep
 import asyncio
 import uvloop
-from io import BytesIO, StringIO
+from io import BytesIO
+from io import StringIO
 import traceback
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -125,15 +126,20 @@ async def handle_message(client, message):
             redirected_output = sys.stdout = StringIO()
             redirected_error = sys.stderr = StringIO()
             stdout, stderr, exc = None, None, None
-            try:
-                exec(cmd)
-            except Exception:
-                exc = traceback.format_exc()
 
-            stdout = redirected_output.getvalue()
-            stderr = redirected_error.getvalue()
-            sys.stdout = old_stdout
-            sys.stderr = old_stderr
+            async def eval_code():
+                nonlocal stdout, stderr, exc
+                try:
+                    exec(cmd)
+                except Exception:
+                    exc = traceback.format_exc()
+
+                stdout = redirected_output.getvalue()
+                stderr = redirected_error.getvalue()
+                sys.stdout = old_stdout
+                sys.stderr = old_stderr
+
+            await eval_code()
 
             evaluation = ""
 
@@ -185,4 +191,3 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
-    
