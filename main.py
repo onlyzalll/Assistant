@@ -44,10 +44,10 @@ async def handle_message(client, message):
 
     if message.from_user.id == OWNER_ID:
         if "start" in text:
-            await client.send_message(message.chat.id, "Halo, saya bot!")
+            await client.send_message(message.chat.id, "Hello, I am your bot!")
 
         elif "leaveall" in text:
-            await message.reply("<b>Memulai proses keluar dari semua grup dan channel...</b>")
+            await message.reply("<b>Starting the process of leaving all groups and channels...</b>")
             er = 0
             done = 0
 
@@ -59,18 +59,18 @@ async def handle_message(client, message):
                         done += 1
                         await sleep(1)
                     except FloodWait as e:
-                        print(f"FloodWait: Menunggu {e.value} detik")
+                        print(f"FloodWait: Waiting for {e.value} seconds")
                         await sleep(e.value)
                     except Exception as e:
-                        print(f"Error saat keluar dari {dialog.chat.title}: {e}")
+                        print(f"Error leaving {dialog.chat.title}: {e}")
                         er += 1
 
             await message.reply(
-                f"<b>Berhasil keluar dari <code>{done}</code> grup/channel, gagal keluar dari <code>{er}</code> grup/channel</b>"
+                f"<b>Successfully left <code>{done}</code> groups/channels, failed to leave <code>{er}</code> groups/channels</b>"
             )
 
         elif "clearall" in text:
-            await message.reply("<b>Memulai proses hapus semua history chat pribadi...</b>")
+            await message.reply("<b>Starting the process of clearing all private chat histories...</b>")
             er = 0
             done = 0
 
@@ -82,27 +82,27 @@ async def handle_message(client, message):
                         done += 1
                         await sleep(1)
                     except FloodWait as e:
-                        print(f"FloodWait: Menunggu {e.value} detik")
+                        print(f"FloodWait: Waiting for {e.value} seconds")
                         await sleep(e.value)
                     except Exception as e:
-                        print(f"Error saat menghapus chat dengan {dialog.chat.id}: {e}")
+                        print(f"Error deleting chat with {dialog.chat.id}: {e}")
                         er += 1
 
             await message.reply(
-                f"<b>Berhasil menghapus <code>{done}</code> pesan dari chat pribadi, gagal menghapus dari <code>{er}</code> chat</b>"
+                f"<b>Successfully deleted <code>{done}</code> messages from private chats, failed to delete from <code>{er}</code> chats</b>"
             )
 
         elif "update" in text:
             try:
-                await client.send_message(message.chat.id, "Melakukan update... silakan tunggu.")
+                await client.send_message(message.chat.id, "Performing update... please wait.")
                 subprocess.run(["git", "pull"], check=True)
-                await client.send_message(message.chat.id, "Update selesai, bot berhasil diaktifkan.")
+                await client.send_message(message.chat.id, "Update completed, bot is up and running.")
                 time.sleep(2)
                 os.execl(sys.executable, sys.executable, "-m", "main")
             except subprocess.CalledProcessError as e:
-                await client.send_message(message.chat.id, f"Gagal melakukan update: {e}")
+                await client.send_message(message.chat.id, f"Update failed: {e}")
             except Exception as e:
-                await client.send_message(message.chat.id, f"Terjadi kesalahan: {e}")
+                await client.send_message(message.chat.id, f"An error occurred: {e}")
 
         elif "ping" in text:
             start = datetime.now()
@@ -111,15 +111,31 @@ async def handle_message(client, message):
             delta_ping = round((end - start).total_seconds() * 1000, 3)
             await client.send_message(message.chat.id, f"Ping: {delta_ping} ms")
 
+        elif "eval" in text:
+            code = text.replace("eval", "").strip()
+            try:
+                result = eval(code)
+                await message.reply(f"Result:\n{result}")
+            except Exception as e:
+                await message.reply(f"Error: {e}")
+
+        elif "sh" in text:
+            command = text.replace("sh", "").strip()
+            try:
+                result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+                await message.reply(f"Result:\n{result.decode()}")
+            except subprocess.CalledProcessError as e:
+                await message.reply(f"Error: {e.output.decode()}")
+
 if __name__ == "__main__":
     while True:
         try:
             print("Running...")
             app.run()
         except (OSError, ConnectionResetError):
-            print("Koneksi terputus, mencoba untuk reconnect dalam 5 detik...")
+            print("Connection lost, trying to reconnect in 5 seconds...")
             time.sleep(5)
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
-            
+                                               
