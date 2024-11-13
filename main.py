@@ -18,7 +18,7 @@ load_dotenv()
 
 api_id = os.getenv("API_ID")
 api_hash = os.getenv("API_HASH")
-OWNER_ID = os.getenv("OWNER_ID")
+OWNER_ID = int(os.getenv("OWNER_ID"))
 
 app = Client("my_account", api_id=api_id, api_hash=api_hash)
 
