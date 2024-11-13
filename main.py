@@ -17,12 +17,14 @@ def _(client, message):
     client.send_message(message.chat.id, "Halo, saya bot!")
 
 @app.on_message(filters.command("leaveall"))
-def exit_groups(client, message):
+def _(client, message):
     if message.from_user.id == OWNER_ID:
-        for chat in client.get_chats():
-            if chat.type in ["supergroup", "channel"]:
-                client.leave_chat(chat.id)
+        dialogs = client.get_dialogs() 
+        for dialog in dialogs:
+            if dialog.chat.type in ["supergroup", "channel"]:
+                client.leave_chat(dialog.chat.id)
         client.send_message(message.chat.id, "Bot telah keluar dari semua grup dan channel!")
-        
-app.run()
-        
+
+if __name__ == "__main__":
+    print("Running...")
+    app.run() 
