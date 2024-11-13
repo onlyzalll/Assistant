@@ -6,7 +6,7 @@ import signal
 from datetime import datetime
 from dotenv import load_dotenv
 from pyrogram import Client, filters, enums
-from pyrogram.errors import FloodWait, RPCError
+from pyrogram.errors import FloodWait
 from asyncio import sleep
 import asyncio
 import uvloop
@@ -50,7 +50,8 @@ async def handle_message(client, message):
             er = 0
             done = 0
 
-            async for dialog in client.get_dialogs():
+            dialogs = await client.get_dialogs()
+            async for dialog in dialogs:
                 if dialog.chat.type in (enums.ChatType.SUPERGROUP, enums.ChatType.GROUP, enums.ChatType.CHANNEL):
                     try:
                         await client.leave_chat(dialog.chat.id)
@@ -67,12 +68,13 @@ async def handle_message(client, message):
                 f"<b>Berhasil keluar dari <code>{done}</code> grup/channel, gagal keluar dari <code>{er}</code> grup/channel</b>"
             )
 
-        elif "hapusall" in text:
+        elif "clearall" in text:
             await message.reply("<b>Memulai proses hapus semua history chat pribadi...</b>")
             er = 0
             done = 0
 
-            async for dialog in client.get_dialogs():
+            dialogs = await client.get_dialogs()
+            async for dialog in dialogs:
                 if dialog.chat.type == enums.ChatType.PRIVATE:
                     try:
                         messages = await client.get_chat_history(dialog.chat.id, limit=100)
@@ -124,4 +126,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
-                                      
+                
