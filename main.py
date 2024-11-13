@@ -6,7 +6,7 @@ import sys
 import signal
 from datetime import datetime
 from dotenv import load_dotenv
-from pyrogram import Client, filters
+from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait, RPCError
 from asyncio import sleep
 import asyncio
@@ -47,15 +47,26 @@ async def handle_message(client, message):
             await client.send_message(message.chat.id, "Halo, saya bot!")
 
         elif "leaveall" in text:
-            dialogs = client.get_dialogs()
-            dialogs_list = list(dialogs)
-            for dialog in dialogs_list:
-                if dialog.chat.type in ["supergroup", "channel"]:
+            await message.reply("<b>Memulai proses keluar dari semua grup dan channel...</b>")
+            er = 0
+            done = 0
+
+            async for dialog in client.get_dialogs():
+                if dialog.chat.type in (enums.ChatType.SUPERGROUP, enums.ChatType.GROUP, enums.ChatType.CHANNEL):
                     try:
                         await client.leave_chat(dialog.chat.id)
+                        done += 1
+                        await sleep(1)
+                    except FloodWait as e:
+                        print(f"FloodWait: Menunggu {e.value} detik")
+                        await sleep(e.value)
                     except Exception as e:
                         print(f"Error saat keluar dari {dialog.chat.title}: {e}")
-            await client.send_message(message.chat.id, "Bot telah keluar dari semua grup dan channel!")
+                        er += 1
+
+            await message.reply(
+                f"<b>Berhasil keluar dari <code>{done}</code> grup/channel, gagal keluar dari <code>{er}</code> grup/channel</b>"
+            )
 
         elif "update" in text:
             try:
