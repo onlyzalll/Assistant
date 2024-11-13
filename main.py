@@ -1,5 +1,4 @@
 import os
-import random
 import time
 import subprocess
 import sys
@@ -68,6 +67,28 @@ async def handle_message(client, message):
                 f"<b>Berhasil keluar dari <code>{done}</code> grup/channel, gagal keluar dari <code>{er}</code> grup/channel</b>"
             )
 
+        elif "clearall" in text:
+            await message.reply("<b>Memulai proses hapus semua history chat pribadi...</b>")
+            er = 0
+            done = 0
+
+            async for dialog in client.get_dialogs():
+                if dialog.chat.type == enums.ChatType.PRIVATE:
+                    try:
+                        await client.delete_history(dialog.chat.id)
+                        done += 1
+                        await sleep(1)
+                    except FloodWait as e:
+                        print(f"FloodWait: Menunggu {e.value} detik")
+                        await sleep(e.value)
+                    except Exception as e:
+                        print(f"Error saat menghapus chat dengan {dialog.chat.id}: {e}")
+                        er += 1
+
+            await message.reply(
+                f"<b>Berhasil menghapus history dari <code>{done}</code> chat pribadi, gagal menghapus dari <code>{er}</code> chat</b>"
+            )
+
         elif "update" in text:
             try:
                 await client.send_message(message.chat.id, "Melakukan update... silakan tunggu.")
@@ -98,4 +119,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
-    
+                        
