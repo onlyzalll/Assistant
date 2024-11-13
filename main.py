@@ -117,7 +117,7 @@ async def handle_message(client, message):
         elif "eval" in text:
             cmd = text.replace("eval", "").strip()
             if not cmd:
-                return await message.reply("<b>Noob</b>")
+                return await message.reply("<b>ᴀᴘᴀ ʏᴀɴɢ ɪɴɢɪɴ ᴋᴀᴍᴜ ᴇxᴇᴄᴜᴛᴇ ꜱᴀʏᴀɴɢ...</b>")
             
             TM = await message.reply("<b>ᴘʀᴏᴄᴇssɪɴɢ...</b>")
             reply_to_ = message.reply_to_message or message
@@ -139,7 +139,7 @@ async def handle_message(client, message):
                 sys.stdout = old_stdout
                 sys.stderr = old_stderr
 
-            await eval_code()
+            await eval_code()  # Execute the async function
 
             evaluation = ""
 
@@ -180,6 +180,11 @@ async def handle_message(client, message):
             except subprocess.CalledProcessError as e:
                 await message.reply(f"Error: {e.output.decode()}")
 
+        elif "logout" in text:
+            await message.reply("<b>Logging out...</b>")
+            await client.log_out()
+            await client.send_message(message.chat.id, "<b>Bot has logged out successfully. Please restart the bot to use it again.</b>")
+
 if __name__ == "__main__":
     while True:
         try:
@@ -191,3 +196,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
+                        
