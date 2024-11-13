@@ -159,14 +159,13 @@ async def on_update(update: Update):
 
 if __name__ == "__main__":
     pytgcalls.start()
-    while True:
-        try:
-            print("Running...")
-            app.run()
-        except (OSError, ConnectionResetError):
-            print("Koneksi terputus, mencoba untuk reconnect dalam 5 detik...")
-            time.sleep(5)
-        except Exception as e:
-            print(f"Unexpected error occurred: {e}")
-            break
-    
+    try:
+        print("Running...")
+        app.run()
+    except (OSError, ConnectionResetError) as e:
+        print(f"Koneksi terputus: {e}. Mencoba reconnect dalam 5 detik...")
+        time.sleep(5)
+        os.execl(sys.executable, sys.executable, "-m", "main")  # Restart bot
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        
