@@ -164,8 +164,9 @@ if __name__ == "__main__":
         app.run()
     except (OSError, ConnectionResetError) as e:
         print(f"Koneksi terputus: {e}. Mencoba reconnect dalam 5 detik...")
+        app.stop()
         time.sleep(5)
-        os.execl(sys.executable, sys.executable, "-m", "main")  # Restart bot
+        os.execl(sys.executable, sys.executable, "-m", "main")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"Unexpected error occurred: {e}")
         
