@@ -17,14 +17,20 @@ def _(client, message):
     client.send_message(message.chat.id, "Halo, saya bot!")
 
 @app.on_message(filters.command("leaveall"))
-def _(client, message):
+def leave_all(client, message):
     if message.from_user.id == OWNER_ID:
         dialogs = client.get_dialogs() 
+        print("Dialogs found:", len(dialogs))
         for dialog in dialogs:
+            print(f"Checking chat: {dialog.chat.title}")
             if dialog.chat.type in ["supergroup", "channel"]:
-                client.leave_chat(dialog.chat.id)
-        client.send_message(message.chat.id, "Bot telah keluar dari semua grup dan channel!")
-
+                try:
+                    client.leave_chat(dialog.chat.id)
+                    client.send_message(message.chat.id, f"Bot berhasil keluar dari {dialog.chat.title}")
+                except Exception as e:
+                    print(f"Error saat keluar dari {dialog.chat.title}: {e}")
+        client.send_message(message.chat.id, "Bot telah mencoba keluar dari semua grup dan channel!")
+        
 if __name__ == "__main__":
     print("Running...")
     app.run() 
