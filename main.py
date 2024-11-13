@@ -12,7 +12,6 @@ import asyncio
 import uvloop
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 load_dotenv()
 
 api_id = os.getenv("API_ID")
@@ -21,7 +20,6 @@ OWNER_ID = 5854836745
 start_time = time.time()
 
 app = Client("my_account", api_id=api_id, api_hash=api_hash)
-
 approved_users = set()
 
 def format_uptime(seconds):
@@ -132,10 +130,9 @@ if __name__ == "__main__":
         print("Running...")
         app.run()
     except (OSError, ConnectionResetError) as e:
-        print(f"Koneksi terputus: {e}. Menco
-ba restart dalam 5 detik...")
+        print(f"Koneksi terputus: {e}. Menco ba restart dalam 5 detik...")
         time.sleep(5)
         restart_bot()
     except Exception as e:
         print(f"Unexpected error occurred: {e}")
-            
+        
