@@ -13,6 +13,5 @@ app = Client("my_account", api_id=api_id, api_hash=api_hash)
 def start(client, message):
     client.send_message(message.chat.id, "Halo, saya bot!")
 
-app.start()
+app.run()
 print("Bot berhasil login dan aktif!")
-app.idle()
