@@ -74,8 +74,7 @@ async def handle_message(client, message):
             er = 0
             done = 0
 
-            dialogs = await client.get_dialogs()
-            async for dialog in dialogs:
+            async for dialog in client.get_dialogs():
                 if dialog.chat.type == enums.ChatType.PRIVATE:
                     try:
                         bot_info = await client.resolve_peer(dialog.chat.id)
