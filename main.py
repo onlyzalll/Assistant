@@ -7,13 +7,12 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait
-from pytgcalls import PyTgCalls
-from pytgcalls.types import Update
 from asyncio import sleep
 import asyncio
 import uvloop
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
 load_dotenv()
 
 api_id = os.getenv("API_ID")
@@ -22,7 +21,8 @@ OWNER_ID = 5854836745
 start_time = time.time()
 
 app = Client("my_account", api_id=api_id, api_hash=api_hash)
-pytgcalls = PyTgCalls(app)
+
+approved_users = set()
 
 def format_uptime(seconds):
     days = seconds // (24 * 3600)
@@ -39,10 +39,24 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+@app.on_message(filters.private & ~filters.me)
+async def pm_permit_handler(client, message):
+    user_id = message.from_user.id
+    if user_id not in approved_users:
+        await message.reply_text(
+            "Halo! 👋\n"
+            "Anda mengirim pesan ke akun bot pribadi.\n"
+            "Mohon tunggu sebentar sampai diizinkan untuk mengirim pesan."
+        )
+        time.sleep(2)
+        approved_users.add(user_id)
+    else:
+        await message.reply_text("Pesan Anda sudah diterima.")
+
 @app.on_message(filters.text)
 async def handle_message(client, message):
     text = message.text.lower()
-    
+
     if message.from_user.id == OWNER_ID:
         if "start" in text:
             await client.send_message(message.chat.id, "Halo, saya bot!")
@@ -108,60 +122,20 @@ async def handle_message(client, message):
             delta_ping = round((end - start).total_seconds() * 1000, 3)
             await client.send_message(message.chat.id, f"Ping: {delta_ping} ms")
 
-        elif "startvc" in text:
-            try:
-                await pytgcalls.start(message.chat.id)
-                await message.reply("Obrolan suara dimulai!")
-            except Exception as e:
-                await message.reply(f"Error: {e}")
-
-        elif "stopvc" in text:
-            try:
-                await pytgcalls.leave_group_call(message.chat.id)
-                await message.reply("Obrolan suara dihentikan!")
-            except Exception as e:
-                await message.reply(f"Error: {e}")
-
-        elif "play" in text:
-            try:
-                audio_url = "https://youtu.be/D1CpWYU3DvA?si=A7WJp4B9HnLakYuG"
-                await pytgcalls.join_group_call(message.chat.id, audio_url)
-                await message.reply("Mulai memutar musik!")
-            except Exception as e:
-                await message.reply(f"Error: {e}")
-
-        elif "end" in text:
-            try:
-                await pytgcalls.leave_group_call(message.chat.id)
-                await message.reply("Musik dihentikan!")
-            except Exception as e:
-                await message.reply(f"Error: {e}")
-
-        elif "vcinfo" in text:
-            try:
-                participants = await pytgcalls.get_participants(message.chat.id)
-                user_list = "\n".join([f"- {user.user.first_name}" for user in participants])
-                await message.reply(f"Pengguna di obrolan suara:\n{user_list}")
-            except Exception as e:
-                await message.reply(f"Error: {e}")
-
-@pytgcalls.on_update()
-async def on_update(update: Update):
-    pass
-
 def restart_bot():
     app.stop()
     time.sleep(2)
     os.execl(sys.executable, sys.executable, *sys.argv)
 
 if __name__ == "__main__":
-    pytgcalls.start()
     try:
         print("Running...")
         app.run()
     except (OSError, ConnectionResetError) as e:
-        print(f"Koneksi terputus: {e}. Mencoba restart dalam 5 detik...")
+        print(f"Koneksi terputus: {e}. Menco
+ba restart dalam 5 detik...")
         time.sleep(5)
         restart_bot()
     except Exception as e:
         print(f"Unexpected error occurred: {e}")
+            
