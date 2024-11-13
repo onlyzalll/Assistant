@@ -7,6 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait
+from pyrogram.raw.functions.messages import DeleteHistory
 from asyncio import sleep
 import asyncio
 import uvloop
@@ -77,14 +78,10 @@ async def handle_message(client, message):
             async for dialog in dialogs:
                 if dialog.chat.type == enums.ChatType.PRIVATE:
                     try:
-                        messages = await client.get_chat_history(dialog.chat.id, limit=100)
-                        message_ids = [msg.message_id for msg in messages]
-                        while message_ids:
-                            await client.delete_messages(dialog.chat.id, message_ids)
-                            done += len(message_ids)
-                            messages = await client.get_chat_history(dialog.chat.id, limit=100)
-                            message_ids = [msg.message_id for msg in messages]
-                            await sleep(1)
+                        bot_info = await client.resolve_peer(dialog.chat.id)
+                        await client.invoke(DeleteHistory(peer=bot_info, max_id=0, revoke=True))
+                        done += 1
+                        await sleep(1)
                     except FloodWait as e:
                         print(f"FloodWait: Menunggu {e.value} detik")
                         await sleep(e.value)
@@ -126,4 +123,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
-                
+                    
