@@ -11,6 +11,8 @@ from pyrogram.raw.functions.messages import DeleteHistory
 from asyncio import sleep
 import asyncio
 import uvloop
+from io import BytesIO, StringIO
+import traceback
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -112,12 +114,57 @@ async def handle_message(client, message):
             await client.send_message(message.chat.id, f"Ping: {delta_ping} ms")
 
         elif "eval" in text:
-            code = text.replace("eval", "").strip()
+            cmd = text.replace("eval", "").strip()
+            if not cmd:
+                return await message.reply("<b>Noob</b>")
+            
+            TM = await message.reply("<b>ᴘʀᴏᴄᴇssɪɴɢ...</b>")
+            reply_to_ = message.reply_to_message or message
+            old_stderr = sys.stderr
+            old_stdout = sys.stdout
+            redirected_output = sys.stdout = StringIO()
+            redirected_error = sys.stderr = StringIO()
+            stdout, stderr, exc = None, None, None
             try:
-                result = eval(code)
-                await message.reply(f"Result:\n{result}")
-            except Exception as e:
-                await message.reply(f"Error: {e}")
+                exec(cmd)
+            except Exception:
+                exc = traceback.format_exc()
+
+            stdout = redirected_output.getvalue()
+            stderr = redirected_error.getvalue()
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+
+            evaluation = ""
+
+            if exc:
+                evaluation = f"<b>ᴏᴜᴛᴘᴜᴛ:</b>\n<pre language='Python'>{exc.strip()}</pre>"
+            elif stderr:
+                evaluation = f"<b>ᴏᴜᴛᴘᴜᴛ:</b>\n<pre language='Python'>{stderr.strip()}</pre>"
+            elif stdout:
+                evaluation = f"<b>ᴏᴜᴛᴘᴜᴛ:</b>\n<pre language='Python'>{stdout.strip()}</pre>"
+            else:
+                evaluation = "<b>ᴏᴜᴛᴘᴜᴛ:</b>\n<pre language='Python'>sᴜᴄᴄᴇss</pre>"
+
+            final_output = (
+                "<b>ɪɴᴩᴜᴛ:</b>\n"
+                f"<pre language='Python'>{cmd}</pre>\n"
+                f"{evaluation}"
+            )
+
+            if len(final_output) > 4096:
+                with BytesIO(str.encode(final_output)) as out_file:
+                    out_file.name = "result.txt"
+                    mm = await reply_to_.reply_document(
+                        document=out_file,
+                        caption=cmd[: 4096 // 4 - 1],
+                        disable_notification=True,
+                        quote=True,
+                    )
+            else:
+                await reply_to_.reply_text(final_output, quote=True)
+
+            await TM.delete()
 
         elif "sh" in text:
             command = text.replace("sh", "").strip()
@@ -138,4 +185,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error occurred: {e}")
             break
-                                               
+    
